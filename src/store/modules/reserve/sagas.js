@@ -1,5 +1,5 @@
 import { call, put, all, takeLatest, select } from 'redux-saga/effects';
-import { addReserveSuccess, updateAmountReserve } from './actions';
+import { addReserveSuccess, updateAmountSuccess } from './actions';
 import api from '../../../services/api'
 
 function* addToReserve({ id }) {
@@ -21,7 +21,7 @@ function* addToReserve({ id }) {
   if (tripExists) {
     const amount = tripExists.amount + 1;
 
-    yield put(updateAmountReserve(id, amount));
+    yield put(updateAmountSuccess(id, amount));
   } else {
     const response = yield call(api.get, `trips/${id}`);
 
@@ -35,6 +35,21 @@ function* addToReserve({ id }) {
 
 }
 
+function* updateAmount({id, amount}){
+  if(amount <= 0) return;
+
+  const myStock = yield call(api.get, `/stock/${id}`);
+
+  const stockAmount = myStock.data.amount;
+
+  if(amount > stockAmount) {
+    alert('Quantidade maxima atingida.');
+    return;
+  }
+  yield put(updateAmountSuccess(id, amount));
+}
+
 export default all([
-  takeLatest('ADD_RESERVE_REQUEST', addToReserve)
+  takeLatest('ADD_RESERVE_REQUEST', addToReserve),
+  takeLatest('UPDATE_RESERVE_REQUEST', updateAmount),
 ])
